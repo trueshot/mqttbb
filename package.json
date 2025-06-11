@@ -5,7 +5,10 @@
   "dependencies": {
     "aws-iot-device-sdk-v2": "^1.17.0",
     "dotenv": "^16.3.1",
-    "redis": "^2.8.0"
+    "log4js": "^6.9.1",
+    "redis": "^2.8.0",
+    "request": "^2.88.2",
+    "ulid": "^2.3.0"
   },
   "scripts": {
     "grep-endpoint": "egrep -o '[-][-]endpoint\\s+\\S+' keys-go-here/start.sh | egrep -o '\\S+$'",
