@@ -5,3 +5,10 @@ node_modules/
 *-Policy
 start.sh
 start.ps1
+/back
+/backlog1
+/temp
+/logs
+processButton-error.log
+*.log
+*.bak

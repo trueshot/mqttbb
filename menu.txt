@@ -1,0 +1,10 @@
+f0) Prior Menu
+1) start Receive MQTT announcements server
+2) start Push Button Handler server
+3) start Tag Printing (Push Tags to ZebraTail)
+4) start RateLimiter (slows down TagsToPrint to once per second)
+5) start processWeight
+
+
+
+node simulateButton ZebraTail-5E_B3_94

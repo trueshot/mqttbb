@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG Display</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #2a303c;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: white;
+            margin: 10px;
+            flex: 0 0 auto;
+        }
+
+        #svg-container {
+            flex: 1 1 auto;
+            min-height: 0; /* Important for Firefox */
+            position: relative;
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        #controls {
+            flex: 0 0 auto;
+            padding: 20px;
+            background-color: #353b48;
+            color: white;
+        }
+
+        .highlighted-element {
+            fill: yellow !important;
+            stroke: orange !important;
+            stroke-width: 2px !important;
+        }
+
+        .highlighted-actor {
+            fill: #ffebcd !important;
+            stroke: #deb887 !important;
+        }
+
+        button {
+            padding: 8px 16px;
+            margin-right: 10px;
+            background-color: #4a5568;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2d3748;
+        }
+
+        #currentEvent {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #2d3748;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre;
+        }
+    </style>
+</head>
+<body>
+    <h1>My SVG Display</h1>
+    <div id="svg-container">
+        <!-- Dummy SVG -->
+<!--<svg aria-roledescription="sequence" role="graphics-document document" style="overflow: hidden; max-width: 100%;" xmlns="http://www.w3.org/2000/svg" width="100%" id="graph-div" height="100%" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ev="http://www.w3.org/2001/xml-events"><defs><symbol height="24" width="24" id="computer"><path d="M2 2v13h20v-13h-20zm18 11h-16v-9h16v9zm-10.228 6l.466-1h3.524l.467 1h-4.457zm14.228 3h-24l2-6h2.104l-1.33 4h18.45l-1.297-4h2.073l2 6zm-5-10h-14v-7h14v7z" transform="scale(.5)"></path></symbol><style id="svg-pan-zoom-controls-styles" type="text/css">.svg-pan-zoom-control { cursor: pointer; fill: black; fill-opacity: 0.333; } .svg-pan-zoom-control:hover { fill-opacity: 0.8; } .svg-pan-zoom-control-background { fill: white; fill-opacity: 0.5; } .svg-pan-zoom-control-background { fill-opacity: 0.8; }</style></defs><defs><symbol clip-rule="evenodd" fill-rule="evenodd" id="database"><path d="M12.258.001l.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045.001.045v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004-.258.001-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045-.001-.045v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056.184-.054.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004.258-.001.258.001zm-9.258 20.499v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004.259.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054-.077-.054v4.127zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023-.161-.024-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054-.077-.054v4.139zm0-5.666v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021.001-.021v-4.153l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001-.185.001-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023-.161-.024-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054-.077-.054v4.153zm8.74-8.179l-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021-.001.021.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004.26.001.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021.001-.021-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004-.26-.001-.26.001z" transform="scale(.5)"></path></symbol></defs><defs><symbol height="24" width="24" id="clock"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111-.719 0-1.301-.582-1.301-1.301 0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"></path></symbol></defs><defs><marker orient="auto-start-reverse" markerHeight="12" markerWidth="12" markerUnits="userSpaceOnUse" refY="5" refX="7.9" id="arrowhead"><path d="M -1 0 L 10 5 L 0 10 z"></path></marker></defs><defs><marker refY="4.5" refX="4" orient="auto" markerHeight="8" markerWidth="15" id="crosshead"><path style="stroke-dasharray: 0, 0;" d="M 1,2 L 6,7 M 6,2 L 1,7" stroke-width="1pt" stroke="#000000" fill="none"></path></marker></defs><defs><marker orient="auto" markerHeight="28" markerWidth="20" refY="7" refX="15.5" id="filled-head"><path d="M 18,7 L9,13 L14,7 L9,1 Z"></path></marker></defs><defs><marker orient="auto" markerHeight="40" markerWidth="60" refY="15" refX="15" id="sequencenumber"><circle r="6" cy="15" cx="15"></circle></marker></defs><g id="viewport-20250105184738293" class="svg-pan-zoom_viewport" transform="matrix(0.9977122031430329,0,0,0.9977122031430329,232.56442301884613,19.558786102911846)" style="transform: matrix(0.997712, 0, 0, 0.997712, 232.564, 19.5588);"><g><rect class="actor actor-bottom" ry="3" rx="3" name="API" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="1536"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1611"><tspan dy="0" x="1611">produceflow.com</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="TP" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="1336"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1411"><tspan dy="0" x="1411">tagprinter.js</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="TPR" height="65" width="188" stroke="#666" fill="#eaeaea" y="1946" x="1098"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1192"><tspan dy="0" x="1192">tagprinterRateLimited.js</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="PB" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="898"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="973"><tspan dy="0" x="973">processbutton.js</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="Redis" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="623"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="698"><tspan dy="0" x="698">Redis</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="RA" height="65" width="156" stroke="#666" fill="#eaeaea" y="1946" x="339"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="417"><tspan dy="0" x="417">receiveAnnounce.js</tspan></text></g><g><rect class="actor actor-bottom" ry="3" rx="3" name="ZT" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="75"><tspan dy="0" x="75">ZebraTail Device</tspan></text></g><g><line name="API" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="1611" y1="65" x1="1611" id="actor6"></line><g id="root-6"><rect class="actor actor-top" ry="3" rx="3" name="API" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="1536"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1611"><tspan dy="0" x="1611">produceflow.com</tspan></text></g></g><g><line name="TP" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="1411" y1="65" x1="1411" id="actor5"></line><g id="root-5"><rect class="actor actor-top" ry="3" rx="3" name="TP" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="1336"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1411"><tspan dy="0" x="1411">tagprinter.js</tspan></text></g></g><g><line name="TPR" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="1192" y1="65" x1="1192" id="actor4"></line><g id="root-4"><rect class="actor actor-top" ry="3" rx="3" name="TPR" height="65" width="188" stroke="#666" fill="#eaeaea" y="0" x="1098"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1192"><tspan dy="0" x="1192">tagprinterRateLimited.js</tspan></text></g></g><g><line name="PB" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="973" y1="65" x1="973" id="actor3"></line><g id="root-3"><rect class="actor actor-top" ry="3" rx="3" name="PB" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="898"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="973"><tspan dy="0" x="973">processbutton.js</tspan></text></g></g><g><line name="Redis" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="698" y1="65" x1="698" id="actor2"></line><g id="root-2"><rect class="actor actor-top" ry="3" rx="3" name="Redis" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="623"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="698"><tspan dy="0" x="698">Redis</tspan></text></g></g><g><line name="RA" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="417" y1="65" x1="417" id="actor1"></line><g id="root-1"><rect class="actor actor-top" ry="3" rx="3" name="RA" height="65" width="156" stroke="#666" fill="#eaeaea" y="0" x="339"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="417"><tspan dy="0" x="417">receiveAnnounce.js</tspan></text></g></g><g><line name="ZT" stroke="#999" stroke-width="0.5px" class="actor-line 200" y2="1946" x2="75" y1="65" x1="75" id="actor0"></line><g id="root-0"><rect class="actor actor-top" ry="3" rx="3" name="ZT" height="65" width="150" stroke="#666" fill="#eaeaea" y="0" x="0"></rect><text style="text-anchor: middle; font-size: 16px; font-weight: 400;" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="75"><tspan dy="0" x="75">ZebraTail Device</tspan></text></g></g><style>#graph-div{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#ccc;}#graph-div .error-icon{fill:#a44141;}#graph-div .error-text{fill:#ddd;stroke:#ddd;}#graph-div .edge-thickness-normal{stroke-width:1px;}#graph-div .edge-thickness-thick{stroke-width:3.5px;}#graph-div .edge-pattern-solid{stroke-dasharray:0;}#graph-div .edge-thickness-invisible{stroke-width:0;fill:none;}#graph-div .edge-pattern-dashed{stroke-dasharray:3;}#graph-div .edge-pattern-dotted{stroke-dasharray:2;}#graph-div .marker{fill:lightgrey;stroke:lightgrey;}#graph-div .marker.cross{stroke:lightgrey;}#graph-div svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#graph-div p{margin:0;}#graph-div .actor{stroke:#ccc;fill:#1f2020;}#graph-div text.actor&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .actor-line{stroke:#ccc;}#graph-div .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:lightgrey;}#graph-div .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:lightgrey;}#graph-div #arrowhead path{fill:lightgrey;stroke:lightgrey;}#graph-div .sequenceNumber{fill:black;}#graph-div #sequencenumber{fill:lightgrey;}#graph-div #crosshead path{fill:lightgrey;stroke:lightgrey;}#graph-div .messageText{fill:lightgrey;stroke:none;}#graph-div .labelBox{stroke:#ccc;fill:#1f2020;}#graph-div .labelText,#graph-div .labelText&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .loopText,#graph-div .loopText&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#ccc;fill:#ccc;}#graph-div .note{stroke:hsl(180, 0%, 18.3529411765%);fill:hsl(180, 1.5873015873%, 28.3529411765%);}#graph-div .noteText,#graph-div .noteText&gt;tspan{fill:rgb(183.8476190475, 181.5523809523, 181.5523809523);stroke:none;}#graph-div .activation0{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .activation1{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .activation2{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .actorPopupMenu{position:absolute;}#graph-div .actorPopupMenuPanel{position:absolute;fill:#1f2020;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#graph-div .actor-man line{stroke:#ccc;fill:#1f2020;}#graph-div .actor-man circle,#graph-div line{stroke:#ccc;fill:#1f2020;stroke-width:2px;}#graph-div :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g></g><g><rect class="note" height="39" width="1386" stroke="#666" fill="#EDF2AE" y="75" x="50"></rect><text style="font-size: 16px; font-weight: 400;" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="743"><tspan x="743">Device Initialization Flow</tspan></text></g><g><rect class="note" height="39" width="1386" stroke="#666" fill="#EDF2AE" y="332" x="50"></rect><text style="font-size: 16px; font-weight: 400;" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="337" x="743"><tspan x="743">Boot Flow</tspan></text></g><g><rect class="note" height="39" width="1386" stroke="#666" fill="#EDF2AE" y="693" x="50"></rect><text style="font-size: 16px; font-weight: 400;" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="698" x="743"><tspan x="743">Button Press Flow</tspan></text></g><g><rect class="note" height="39" width="1386" stroke="#666" fill="#EDF2AE" y="1158" x="50"></rect><text style="font-size: 16px; font-weight: 400;" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1163" x="743"><tspan x="743">Rate Limited Printing</tspan></text></g><g><line class="loopLine" y2="1207" x2="1203" y1="1207" x1="687"></line><line class="loopLine" y2="1669" x2="1203" y1="1207" x1="1203"></line><line class="loopLine" y2="1669" x2="1203" y1="1669" x1="687"></line><line class="loopLine" y2="1669" x2="687" y1="1207" x1="687"></line><polygon class="labelBox" points="687,1207 737,1207 737,1220 728.6,1227 687,1227"></polygon><text style="font-size: 16px; font-weight: 400;" class="labelText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1220" x="712">loop</text><text style="font-size: 16px; font-weight: 400;" class="loopText" text-anchor="middle" y="1225" x="970"><tspan x="970">[Every second]</tspan></text></g><g><rect class="note" height="39" width="1386" stroke="#666" fill="#EDF2AE" y="1783" x="50"></rect><text style="font-size: 16px; font-weight: 400;" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1788" x="743"><tspan x="743">Heartbeat Flow</tspan></text></g><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="129" x="245">MQTT: initialize (ZebraTail/announce)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="166" x2="413" y1="166" x1="76"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="181" x="556">RPUSH TagsToPrint</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="218" x2="694" y1="218" x1="418"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="233" x="1053">BLPOP TagsToPrint</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="270" x2="1407" y1="270" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="285" x="745">MQTT: Print init label (thingName/direct)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="322" x2="79" y1="322" x1="1410"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="386" x="245">MQTT: boot (ZebraTail/announce)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="423" x2="413" y1="423" x1="76"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="438" x="556">GET device config</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="475" x2="694" y1="475" x1="418"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="490" x="559">Return template</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="527" x2="421" y1="527" x1="697"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="542" x="556">RPUSH TagsToPrint (template)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="579" x2="694" y1="579" x1="418"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="594" x="1053">BLPOP TagsToPrint</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="631" x2="1407" y1="631" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="646" x="745">MQTT: Print template (thingName/direct)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="683" x2="79" y1="683" x1="1410"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="747" x="245">MQTT: button (ZebraTail/announce)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="784" x2="413" y1="784" x1="76"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="799" x="556">RPUSH ButtonPushed</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="836" x2="694" y1="836" x1="418"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="851" x="834">BLPOP ButtonPushed</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="888" x2="969" y1="888" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="903" x="837">GET device info</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="940" x2="702" y1="940" x1="972"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="955" x="834">Return device config</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="992" x2="969" y1="992" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1007" x="1291">HTTP: Get ZPL data</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1044" x2="1607" y1="1044" x1="974"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1059" x="1294">Return ZPL</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="1096" x2="977" y1="1096" x1="1610"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1111" x="837">ZADD printer_jobs:{printerId}</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1148" x2="702" y1="1148" x1="972"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1258" x="947">SMEMBERS active_printers</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1295" x2="702" y1="1295" x1="1191"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1310" x="944">Return printer IDs</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="1347" x2="1188" y1="1347" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1362" x="947">ZRANGEBYSCORE printer_jobs:{printerId}</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1399" x2="702" y1="1399" x1="1191"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1414" x="944">Return due jobs</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="1451" x2="1188" y1="1451" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1466" x="947">GET hash:job:{jobHash}</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1503" x2="702" y1="1503" x1="1191"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1518" x="944">Check if processed</text><line style="stroke-dasharray: 3, 3; fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine1" y2="1555" x2="1188" y1="1555" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1570" x="947">RPUSH TagsToPrint (if not processed)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1607" x2="702" y1="1607" x1="1191"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1622" x="947">SETEX hash:job:{jobHash}</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1659" x2="702" y1="1659" x1="1191"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1684" x="1053">BLPOP TagsToPrint</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1721" x2="1407" y1="1721" x1="699"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1736" x="745">MQTT: Print label (thingName/direct)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1773" x2="79" y1="1773" x1="1410"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1837" x="245">MQTT: heartbeat (ZebraTail/announce)</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1874" x2="413" y1="1874" x1="76"></line><text style="font-size: 16px; font-weight: 400;" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1889" x="556">Log heartbeat</text><line style="fill: none;" marker-end="url(#arrowhead)" stroke="none" stroke-width="2" class="messageLine0" y2="1926" x2="694" y1="1926" x1="418"></line></g><g id="svg-pan-zoom-controls" transform="translate(2198 1779) scale(0.75)" class="svg-pan-zoom-control"><g id="svg-pan-zoom-zoom-in" transform="translate(30.5 5) scale(0.015)" class="svg-pan-zoom-control"><rect x="0" y="0" width="1500" height="1400" class="svg-pan-zoom-control-background"></rect><path d="M1280 576v128q0 26 -19 45t-45 19h-320v320q0 26 -19 45t-45 19h-128q-26 0 -45 -19t-19 -45v-320h-320q-26 0 -45 -19t-19 -45v-128q0 -26 19 -45t45 -19h320v-320q0 -26 19 -45t45 -19h128q26 0 45 19t19 45v320h320q26 0 45 19t19 45zM1536 1120v-960 q0 -119 -84.5 -203.5t-203.5 -84.5h-960q-119 0 -203.5 84.5t-84.5 203.5v960q0 119 84.5 203.5t203.5 84.5h960q119 0 203.5 -84.5t84.5 -203.5z" class="svg-pan-zoom-control-element"></path></g><g id="svg-pan-zoom-reset-pan-zoom" transform="translate(5 35) scale(0.4)" class="svg-pan-zoom-control"><rect x="2" y="2" width="182" height="58" class="svg-pan-zoom-control-background"></rect><path d="M33.051,20.632c-0.742-0.406-1.854-0.609-3.338-0.609h-7.969v9.281h7.769c1.543,0,2.701-0.188,3.473-0.562c1.365-0.656,2.048-1.953,2.048-3.891C35.032,22.757,34.372,21.351,33.051,20.632z" class="svg-pan-zoom-control-element"></path><path d="M170.231,0.5H15.847C7.102,0.5,0.5,5.708,0.5,11.84v38.861C0.5,56.833,7.102,61.5,15.847,61.5h154.384c8.745,0,15.269-4.667,15.269-10.798V11.84C185.5,5.708,178.976,0.5,170.231,0.5z M42.837,48.569h-7.969c-0.219-0.766-0.375-1.383-0.469-1.852c-0.188-0.969-0.289-1.961-0.305-2.977l-0.047-3.211c-0.03-2.203-0.41-3.672-1.142-4.406c-0.732-0.734-2.103-1.102-4.113-1.102h-7.05v13.547h-7.055V14.022h16.524c2.361,0.047,4.178,0.344,5.45,0.891c1.272,0.547,2.351,1.352,3.234,2.414c0.731,0.875,1.31,1.844,1.737,2.906s0.64,2.273,0.64,3.633c0,1.641-0.414,3.254-1.242,4.84s-2.195,2.707-4.102,3.363c1.594,0.641,2.723,1.551,3.387,2.73s0.996,2.98,0.996,5.402v2.32c0,1.578,0.063,2.648,0.19,3.211c0.19,0.891,0.635,1.547,1.333,1.969V48.569z M75.579,48.569h-26.18V14.022h25.336v6.117H56.454v7.336h16.781v6H56.454v8.883h19.125V48.569z M104.497,46.331c-2.44,2.086-5.887,3.129-10.34,3.129c-4.548,0-8.125-1.027-10.731-3.082s-3.909-4.879-3.909-8.473h6.891c0.224,1.578,0.662,2.758,1.316,3.539c1.196,1.422,3.246,2.133,6.15,2.133c1.739,0,3.151-0.188,4.236-0.562c2.058-0.719,3.087-2.055,3.087-4.008c0-1.141-0.504-2.023-1.512-2.648c-1.008-0.609-2.607-1.148-4.796-1.617l-3.74-0.82c-3.676-0.812-6.201-1.695-7.576-2.648c-2.328-1.594-3.492-4.086-3.492-7.477c0-3.094,1.139-5.664,3.417-7.711s5.623-3.07,10.036-3.07c3.685,0,6.829,0.965,9.431,2.895c2.602,1.93,3.966,4.73,4.093,8.402h-6.938c-0.128-2.078-1.057-3.555-2.787-4.43c-1.154-0.578-2.587-0.867-4.301-0.867c-1.907,0-3.428,0.375-4.565,1.125c-1.138,0.75-1.706,1.797-1.706,3.141c0,1.234,0.561,2.156,1.682,2.766c0.721,0.406,2.25,0.883,4.589,1.43l6.063,1.43c2.657,0.625,4.648,1.461,5.975,2.508c2.059,1.625,3.089,3.977,3.089,7.055C108.157,41.624,106.937,44.245,104.497,46.331z M139.61,48.569h-26.18V14.022h25.336v6.117h-18.281v7.336h16.781v6h-16.781v8.883h19.125V48.569z M170.337,20.14h-10.336v28.43h-7.266V20.14h-10.383v-6.117h27.984V20.14z" class="svg-pan-zoom-control-element"></path></g><g id="svg-pan-zoom-zoom-out" transform="translate(30.5 70) scale(0.015)" class="svg-pan-zoom-control"><rect x="0" y="0" width="1500" height="1400" class="svg-pan-zoom-control-background"></rect><path d="M1280 576v128q0 26 -19 45t-45 19h-896q-26 0 -45 -19t-19 -45v-128q0 -26 19 -45t45 -19h896q26 0 45 19t19 45zM1536 1120v-960q0 -119 -84.5 -203.5t-203.5 -84.5h-960q-119 0 -203.5 84.5t-84.5 203.5v960q0 119 84.5 203.5t203.5 84.5h960q119 0 203.5 -84.5 t84.5 -203.5z" class="svg-pan-zoom-control-element"></path></g></g></svg>-->
+<svg aria-roledescription="sequence" style="overflow:hidden;max-width:100%" xmlns="http://www.w3.org/2000/svg" width="100%" id="graph-div" height="80%">
+  <defs>
+    <symbol id="computer">
+      <path d="M2 2v13h20V2H2zm18 11H4V4h16v9zM9.772 19l.466-1h3.524l.467 1H9.772zM24 22H0l2-6h2.104l-1.33 4h18.45l-1.297-4H22l2 6zm-5-10H5V5h14v7z" transform="scale(.5)"/>
+    </symbol>
+    <style id="svg-pan-zoom-controls-styles" type="text/css">
+      .svg-pan-zoom-control { cursor: pointer; fill: black; fill-opacity: 0.333; } .svg-pan-zoom-control:hover { fill-opacity: 0.8; } .svg-pan-zoom-control-background { fill: white; fill-opacity: 0.5; } .svg-pan-zoom-control-background { fill-opacity: 0.8; }
+    </style>
+  </defs>
+  <defs>
+    <symbol clip-rule="evenodd" fill-rule="evenodd" id="database">
+      <path d="m12.258.001.256.004.255.005.253.008.251.01.249.012.247.015.246.016.242.019.241.02.239.023.236.024.233.027.231.028.229.031.225.032.223.034.22.036.217.038.214.04.211.041.208.043.205.045.201.046.198.048.194.05.191.051.187.053.183.054.18.056.175.057.172.059.168.06.163.061.16.063.155.064.15.066.074.033.073.033.071.034.07.034.069.035.068.035.067.035.066.035.064.036.064.036.062.036.06.036.06.037.058.037.058.037.055.038.055.038.053.038.052.038.051.039.05.039.048.039.047.039.045.04.044.04.043.04.041.04.04.041.039.041.037.041.036.041.034.041.033.042.032.042.03.042.029.042.027.042.026.043.024.043.023.043.021.043.02.043.018.044.017.043.015.044.013.044.012.044.011.045.009.044.007.045.006.045.004.045.002.045L22 3.5v17l-.001.045-.002.045-.004.045-.006.045-.007.045-.009.044-.011.045-.012.044-.013.044-.015.044-.017.043-.018.044-.02.043-.021.043-.023.043-.024.043-.026.043-.027.042-.029.042-.03.042-.032.042-.033.042-.034.041-.036.041-.037.041-.039.041-.04.041-.041.04-.043.04-.044.04-.045.04-.047.039-.048.039-.05.039-.051.039-.052.038-.053.038-.055.038-.055.038-.058.037-.058.037-.06.037-.06.036-.062.036-.064.036-.064.036-.066.035-.067.035-.068.035-.069.035-.07.034-.071.034-.073.033-.074.033-.15.066-.155.064-.16.063-.163.061-.168.06-.172.059-.175.057-.18.056-.183.054-.187.053-.191.051-.194.05-.198.048-.201.046-.205.045-.208.043-.211.041-.214.04-.217.038-.22.036-.223.034-.225.032-.229.031-.231.028-.233.027-.236.024-.239.023-.241.02-.242.019-.246.016-.247.015-.249.012-.251.01-.253.008-.255.005-.256.004L12 24l-.258-.001-.256-.004-.255-.005-.253-.008-.251-.01-.249-.012-.247-.015-.245-.016-.243-.019-.241-.02-.238-.023-.236-.024-.234-.027-.231-.028-.228-.031-.226-.032-.223-.034-.22-.036-.217-.038-.214-.04-.211-.041-.208-.043-.204-.045-.201-.046-.198-.048-.195-.05-.19-.051-.187-.053-.184-.054-.179-.056-.176-.057-.172-.059-.167-.06-.164-.061-.159-.063-.155-.064-.151-.066-.074-.033-.072-.033-.072-.034-.07-.034-.069-.035-.068-.035-.067-.035-.066-.035-.064-.036-.063-.036-.062-.036-.061-.036-.06-.037-.058-.037-.057-.037-.056-.038-.055-.038-.053-.038-.052-.038-.051-.039-.049-.039-.049-.039-.046-.039-.046-.04-.044-.04-.043-.04-.041-.04-.04-.041-.039-.041-.037-.041-.036-.041-.034-.041-.033-.042-.032-.042-.03-.042-.029-.042-.027-.042-.026-.043-.024-.043-.023-.043-.021-.043-.02-.043-.018-.044-.017-.043-.015-.044-.013-.044-.012-.044-.011-.045-.009-.044-.007-.045-.006-.045-.004-.045-.002-.045L2 20.5v-17l.001-.045.002-.045.004-.045.006-.045.007-.045.009-.044.011-.045.012-.044.013-.044.015-.044.017-.043.018-.044.02-.043.021-.043.023-.043.024-.043.026-.043.027-.042.029-.042.03-.042.032-.042.033-.042.034-.041.036-.041.037-.041.039-.041.04-.041.041-.04.043-.04.044-.04.046-.04.046-.039.049-.039.049-.039.051-.039.052-.038.053-.038.055-.038.056-.038.057-.037.058-.037.06-.037.061-.036.062-.036.063-.036.064-.036.066-.035.067-.035.068-.035.069-.035.07-.034.072-.034.072-.033.074-.033.151-.066.155-.064.159-.063.164-.061.167-.06.172-.059.176-.057.179-.056L5.641.8l.187-.053.19-.051.195-.05.198-.048.201-.046.204-.045.208-.043.211-.041.214-.04.217-.038.22-.036.223-.034.226-.032.228-.031.231-.028.234-.027.236-.024.238-.023.241-.02.243-.019.245-.016.247-.015.249-.012.251-.01.253-.008.255-.005.256-.004L12 0l.258.001zM3 20.5v.01l.001.021.003.021.004.022.005.021.006.022.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.023.018.024.019.024.021.024.022.025.023.024.024.025.052.049.056.05.061.051.066.051.07.051.075.051.079.052.084.052.088.052.092.052.097.052.102.051.105.052.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.048.144.049.147.047.152.047.155.047.16.045.163.045.167.043.171.043.176.041.178.041.183.039.187.039.19.037.194.035.197.035.202.033.204.031.209.03.212.029.216.027.219.025.222.024.226.021.23.02.233.018.236.016.24.015.243.012.246.01.249.008.253.005.256.004L12 23l.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.021.224-.024.22-.026.216-.027.212-.028.21-.031.205-.031.202-.034.198-.034.194-.036.191-.037.187-.039.183-.04.179-.04.175-.042.172-.043.168-.044.163-.045.16-.046.155-.046.152-.047.148-.048.143-.049.139-.049.136-.05.131-.05.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.053.083-.051.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.05.023-.024.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.023.01-.022.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021L21 20.5v-4.127l-.077.055-.08.053-.083.054-.085.053-.087.052-.09.052-.093.051-.095.05-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.045-.118.044-.12.043-.122.042-.124.042-.126.041-.128.04-.13.04-.132.038-.134.038-.135.037-.138.037-.139.035-.142.035-.143.034-.144.033-.147.032-.148.031-.15.03-.151.03-.153.029-.154.027-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.01-.179.008-.179.008-.181.006-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.006-.179-.008-.179-.008-.178-.01-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023L8 18.055l-.159-.025-.157-.026-.156-.027-.155-.027-.153-.029-.151-.03-.15-.03-.148-.031-.146-.032-.145-.033-.143-.034-.141-.035-.14-.035-.137-.037-.136-.037-.134-.038-.132-.038-.13-.04-.128-.04-.126-.041-.124-.042-.122-.042-.12-.044-.117-.043-.116-.045-.113-.045-.112-.046-.109-.047-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.05-.093-.052-.09-.051-.087-.052-.085-.053-.083-.054-.08-.054L3 16.373V20.5zm0-5.654v.011l.001.021.003.021.004.021.005.022.006.022.007.022.009.022.01.022.011.023.012.023.013.023.015.024.016.023.017.024.018.024.019.024.021.024.022.024.023.025.024.024.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.052.11.051.114.051.119.052.123.05.127.051.131.05.135.049.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.044.171.042.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.022.23.02.233.018.236.016.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.012.241-.015.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.048.139-.05.136-.049.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.051.051-.049.023-.025.023-.024.021-.025.02-.024.019-.024.018-.024.017-.024.015-.023.014-.023.013-.024.012-.022.01-.023.01-.023.008-.022.006-.022.006-.022.004-.021.004-.022.001-.021.001-.021v-4.139l-.077.054-.08.054-.083.054-.085.052-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.049-.105.048-.106.047-.109.047-.111.046-.114.045-.115.044-.118.044-.12.044-.122.042-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.035-.143.033-.144.033-.147.033-.148.031-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.025-.161.024-.162.023-.163.022-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.011-.178.009-.179.009-.179.007-.181.007-.182.005-.182.004-.184.003-.184.002h-.37l-.184-.002-.184-.003-.182-.004-.182-.005-.181-.007-.179-.007-.179-.009-.178-.009-.176-.011-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.022-.162-.023L8 12.389l-.159-.025-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.031-.146-.033-.145-.033-.143-.033-.141-.035-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.04-.126-.041-.124-.042-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046-.109-.046-.106-.047-.105-.048-.102-.049-.1-.049-.097-.05-.095-.051-.093-.051-.09-.051-.087-.053-.085-.052-.083-.054-.08-.054L3 10.707v4.139zM3 9.18v.011l.001.02.003.022.004.021.005.022.006.021.007.022.009.023.01.022.011.023.012.023.013.023.015.023.016.024.017.024.018.023.019.024.021.025.022.024.023.024.024.025.052.05.056.05.061.05.066.051.07.051.075.052.079.051.084.052.088.052.092.052.097.052.102.052.105.051.11.052.114.051.119.051.123.051.127.05.131.05.135.05.139.049.144.048.147.048.152.047.155.046.16.045.163.045.167.043.171.043.176.042.178.04.183.04.187.038.19.037.194.036.197.034.202.033.204.032.209.03.212.028.216.027.219.025.222.024.226.021.23.02.233.018.236.017.24.014.243.012.246.01.249.008.253.006.256.003.259.001.26-.001.257-.003.254-.006.25-.008.247-.01.244-.013.241-.014.237-.016.233-.018.231-.02.226-.022.224-.024.22-.025.216-.027.212-.029.21-.03.205-.032.202-.033.198-.035.194-.036.191-.037.187-.039.183-.039.179-.041.175-.042.172-.043.168-.044.163-.045.16-.045.155-.047.152-.047.148-.048.143-.049.139-.049.136-.049.131-.051.126-.05.123-.051.118-.052.114-.051.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.052.07-.051.065-.051.06-.051.056-.05.051-.049.023-.025.023-.025.021-.024.02-.024.019-.024.018-.024.017-.024.015-.023.014-.024.013-.023.012-.023.01-.022.01-.023.008-.022.006-.022.006-.022.004-.022.004-.021.001-.021L21 9.18V5.027l-.077.054-.08.054-.083.053-.085.053-.087.053-.09.051-.093.051-.095.051-.097.05-.1.049-.102.048-.105.048-.106.048-.109.046-.111.046-.114.046-.115.044-.118.044-.12.043-.122.043-.124.042-.126.041-.128.04-.13.039-.132.039-.134.038-.135.037-.138.036-.139.036-.142.034-.143.034-.144.033-.147.032-.148.032-.15.03-.151.03-.153.028-.154.028-.156.027-.158.026-.159.024-.161.024-.162.023-.163.023-.165.021-.166.02-.167.019-.169.018-.169.017-.171.016-.173.015-.173.014-.175.013-.175.012-.177.01-.178.01-.179.009-.179.007-.181.006-.182.006-.182.004-.184.003-.184.001L12 7l-.185-.001-.184-.001-.184-.003-.182-.004-.182-.006-.181-.006-.179-.007-.179-.009-.178-.01-.176-.01-.176-.012-.175-.013-.173-.014-.172-.015-.171-.016-.17-.017-.169-.018-.167-.019-.166-.02-.165-.021-.163-.023-.162-.023L8 6.708l-.159-.024-.157-.026-.156-.027-.155-.028-.153-.028-.151-.03-.15-.03-.148-.032-.146-.032-.145-.033-.143-.034-.141-.034-.14-.036-.137-.036-.136-.037-.134-.038-.132-.039-.13-.039-.128-.041-.126-.041-.124-.041-.122-.043-.12-.043-.117-.044-.116-.044-.113-.046-.112-.046L4.2 5.69l-.106-.048-.105-.048-.102-.048-.1-.05-.097-.049-.095-.051-.093-.051-.09-.052-.087-.052-.085-.053-.083-.053-.08-.054L3 5.027V9.18zm8.74-8.179-.257.004-.254.005-.25.008-.247.011-.244.012-.241.014-.237.016-.233.018-.231.021-.226.022-.224.023-.22.026-.216.027-.212.028-.21.031-.205.032-.202.033-.198.034-.194.036-.191.038-.187.038-.183.04-.179.041-.175.042-.172.043-.168.043-.163.045-.16.046-.155.046-.152.048-.148.048-.143.048-.139.049-.136.05-.131.05-.126.051-.123.051-.118.051-.114.052-.11.052-.106.052-.101.052-.096.052-.092.052-.088.052-.083.052-.079.052-.074.051-.07.052-.065.051-.06.05-.056.05-.051.05-.023.025-.023.024-.021.024-.02.025-.019.024-.018.024-.017.023-.015.024-.014.023-.013.023-.012.023-.01.023-.01.022-.008.022-.006.023-.006.021-.004.022-.004.021-.001.021L3 3.5l.001.021.001.021.004.021.004.022.006.021.006.023.008.022.01.022.01.023.012.023.013.023.014.023.015.024.017.023.018.024.019.024.02.025.021.024.023.024.023.025.051.05.056.05.06.05.065.051.07.052.074.051.079.052.083.052.088.052.092.052.096.052.101.052.106.052.11.052.114.052.118.051.123.051.126.051.131.05.136.05.139.049.143.048.148.048.152.048.155.046.16.046.163.045.168.043.172.043.175.042.179.041.183.04.187.038.191.038.194.036.198.034.202.033.205.032.21.031.212.028.216.027.22.026.224.023.226.022.231.021.233.018.237.016.241.014.244.012.247.011.25.008.254.005.257.004L12 6l.26-.001.257-.004.254-.005.25-.008.247-.011.244-.012.241-.014.237-.016.233-.018.231-.021.226-.022.224-.023.22-.026.216-.027.212-.028.21-.031.205-.032.202-.033.198-.034.194-.036.191-.038.187-.038.183-.04.179-.041.175-.042.172-.043.168-.043.163-.045.16-.046.155-.046.152-.048.148-.048.143-.048.139-.049.136-.05.131-.05.126-.051.123-.051.118-.051.114-.052.11-.052.106-.052.101-.052.096-.052.092-.052.088-.052.083-.052.079-.052.074-.051.07-.052.065-.051.06-.05.056-.05.051-.05.023-.025.023-.024.021-.024.02-.025.019-.024.018-.024.017-.023.015-.024.014-.023.013-.023.012-.023.01-.023.01-.022.008-.022.006-.023.006-.021.004-.022.004-.021.001-.021L21 3.5l-.001-.021-.001-.021-.004-.021-.004-.022-.006-.021-.006-.023-.008-.022-.01-.022-.01-.023-.012-.023-.013-.023-.014-.023-.015-.024-.017-.023-.018-.024-.019-.024-.02-.025-.021-.024-.023-.024-.023-.025-.051-.05-.056-.05-.06-.05-.065-.051-.07-.052-.074-.051-.079-.052-.083-.052-.088-.052-.092-.052-.096-.052-.101-.052-.106-.052-.11-.052-.114-.052-.118-.051-.123-.051-.126-.051-.131-.05-.136-.05-.139-.049-.143-.048-.148-.048-.152-.048-.155-.046-.16-.046-.163-.045-.168-.043-.172-.043-.175-.042-.179-.041-.183-.04-.187-.038-.191-.038-.194-.036-.198-.034-.202-.033-.205-.032-.21-.031-.212-.028-.216-.027-.22-.026-.224-.023-.226-.022-.231-.021-.233-.018-.237-.016-.241-.014-.244-.012-.247-.011-.25-.008-.254-.005-.257-.004L12 1l-.26.001z" transform="scale(.5)"/>
+    </symbol>
+  </defs>
+  <defs>
+    <symbol id="clock">
+      <path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10S2 17.514 2 12 6.486 2 12 2zm0-2C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.848 12.459c.202.038.202.333.001.372-1.907.361-6.045 1.111-6.547 1.111a1.3 1.3 0 0 1-1.301-1.301c0-.512.77-5.447 1.125-7.445.034-.192.312-.181.343.014l.985 6.238 5.394 1.011z" transform="scale(.5)"/>
+    </symbol>
+  </defs>
+  <defs>
+    <marker orient="auto-start-reverse" markerHeight="12" markerWidth="12" markerUnits="userSpaceOnUse" refY="5" refX="7.9" id="arrowhead">
+      <path d="m-1 0 11 5-10 5z"/>
+    </marker>
+  </defs>
+  <defs>
+    <marker refY="4.5" refX="4" orient="auto" markerHeight="8" markerWidth="15" id="crosshead">
+      <path style="stroke-dasharray:0, 0" d="m1 2 5 5m0-5L1 7" stroke-width="1pt" stroke="#000" fill="none"/>
+    </marker>
+  </defs>
+  <defs>
+    <marker orient="auto" markerHeight="28" markerWidth="20" refY="7" refX="15.5" id="filled-head">
+      <path d="m18 7-9 6 5-6-5-6Z"/>
+    </marker>
+  </defs>
+  <defs>
+    <marker orient="auto" markerHeight="40" markerWidth="60" refY="15" refX="15" id="sequencenumber">
+      <circle r="6" cy="15" cx="15"/>
+    </marker>
+  </defs>
+  <g id="viewport-20250105184738293" class="svg-pan-zoom_viewport" transform="translate(232.564 19.559) scale(.99771)" style="transform:matrix(0.997712, 0, 0, 0.997712, 232.564, 19.5588)">
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="1536"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1611"><tspan id="produceflow_com_bottom" dy="0" x="1611">produceflow.com</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="1336"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1411"><tspan id="tagprinter_js_bottom" dy="0" x="1411">tagprinter.js</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="188" stroke="#666" fill="#eaeaea" y="1946" x="1098"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="1192"><tspan id="tagprinterRateLimited_js_bottom"  dy="0" x="1192">tagprinterRateLimited.js</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="898"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="973"><tspan id="processbutton_js_bottom"  dy="0" x="973">processbutton.js</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946" x="623"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="698"><tspan id="Redis_bottom"  dy="0" x="698">Redis</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="156" stroke="#666" fill="#eaeaea" y="1946" x="339"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="417"><tspan id="receiveAnnounce_js_bottom"  dy="0" x="417">receiveAnnounce.js</tspan></text>
+    <rect class="actor actor-bottom" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" y="1946"/>
+    <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="1978.5" x="75"><tspan id="ZebraTail_Device_bottom"  dy="0" x="75">ZebraTail Device</tspan></text>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor6" d="M1611 65v1881"/>
+    <g id="root-6">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" x="1536"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1611"><tspan id="produceflow_com"  dy="0" x="1611">produceflow.com</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor5" d="M1411 65v1881"/>
+    <g id="root-5">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" x="1336"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1411"><tspan id="tagprinter_js"  dy="0" x="1411">tagprinter.js</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor4" d="M1192 65v1881"/>
+    <g id="root-4">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="188" stroke="#666" fill="#eaeaea" x="1098"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="1192"><tspan id="tagprinterRateLimited_js"  dy="0" x="1192">tagprinterRateLimited.js</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor3" d="M973 65v1881"/>
+    <g id="root-3">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" x="898"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="973"><tspan id="processbutton_js"  dy="0" x="973">processbutton.js</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor2" d="M698 65v1881"/>
+    <g id="root-2">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea" x="623"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="698"><tspan id="Redis"  dy="0" x="698">Redis</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor1" d="M417 65v1881"/>
+    <g id="root-1">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="156" stroke="#666" fill="#eaeaea" x="339"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="417"><tspan id="receiveAnnounce_js"  dy="0" x="417">receiveAnnounce.js</tspan></text>
+    </g>
+    <path stroke="#999" stroke-width=".5" class="actor-line 200" id="actor0" d="M75 65v1881"/>
+    <g id="root-0">
+      <rect class="actor actor-top" ry="3" rx="3" height="65" width="150" stroke="#666" fill="#eaeaea"/>
+      <text style="text-anchor:middle;font-size:16px;font-weight:400" class="actor actor-box" alignment-baseline="central" dominant-baseline="central" y="32.5" x="75"><tspan id="ZebraTail_Device"  dy="0" x="75">ZebraTail Device</tspan></text>
+    </g>
+    <style>
+      #graph-div{font-family:&quot;trebuchet ms&quot;,verdana,arial,sans-serif;font-size:16px;fill:#ccc;}#graph-div .error-icon{fill:#a44141;}#graph-div .error-text{fill:#ddd;stroke:#ddd;}#graph-div .edge-thickness-normal{stroke-width:1px;}#graph-div .edge-thickness-thick{stroke-width:3.5px;}#graph-div .edge-pattern-solid{stroke-dasharray:0;}#graph-div .edge-thickness-invisible{stroke-width:0;fill:none;}#graph-div .edge-pattern-dashed{stroke-dasharray:3;}#graph-div .edge-pattern-dotted{stroke-dasharray:2;}#graph-div .marker{fill:lightgrey;stroke:lightgrey;}#graph-div .marker.cross{stroke:lightgrey;}#graph-div svg{font-family:&quot;trebuchet ms&quot;,verdana,arial,sans-serif;font-size:16px;}#graph-div p{margin:0;}#graph-div .actor{stroke:#ccc;fill:#1f2020;}#graph-div text.actor&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .actor-line{stroke:#ccc;}#graph-div .messageLine0{stroke-width:1.5;stroke-dasharray:none;stroke:lightgrey;}#graph-div .messageLine1{stroke-width:1.5;stroke-dasharray:2,2;stroke:lightgrey;}#graph-div #arrowhead path{fill:lightgrey;stroke:lightgrey;}#graph-div .sequenceNumber{fill:black;}#graph-div #sequencenumber{fill:lightgrey;}#graph-div #crosshead path{fill:lightgrey;stroke:lightgrey;}#graph-div .messageText{fill:lightgrey;stroke:none;}#graph-div .labelBox{stroke:#ccc;fill:#1f2020;}#graph-div .labelText,#graph-div .labelText&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .loopText,#graph-div .loopText&gt;tspan{fill:lightgrey;stroke:none;}#graph-div .loopLine{stroke-width:2px;stroke-dasharray:2,2;stroke:#ccc;fill:#ccc;}#graph-div .note{stroke:hsl(180, 0%, 18.3529411765%);fill:hsl(180, 1.5873015873%, 28.3529411765%);}#graph-div .noteText,#graph-div .noteText&gt;tspan{fill:rgb(183.8476190475, 181.5523809523, 181.5523809523);stroke:none;}#graph-div .activation0{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .activation1{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .activation2{fill:hsl(180, 1.5873015873%, 28.3529411765%);stroke:#ccc;}#graph-div .actorPopupMenu{position:absolute;}#graph-div .actorPopupMenuPanel{position:absolute;fill:#1f2020;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);filter:drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));}#graph-div .actor-man line{stroke:#ccc;fill:#1f2020;}#graph-div .actor-man circle,#graph-div line{stroke:#ccc;fill:#1f2020;stroke-width:2px;}#graph-div :root{--mermaid-font-family:&quot;trebuchet ms&quot;,verdana,arial,sans-serif;}
+    </style>
+    <path class="note" stroke="#666" fill="#EDF2AE" d="M50 75h1386v39H50z"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="80" x="743"><tspan id="Device_Initialization_Flow"  x="743">Device Initialization Flow</tspan></text>
+    <path class="note" stroke="#666" fill="#EDF2AE" d="M50 332h1386v39H50z"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="337" x="743"><tspan id="Boot_Flow" x="743">Boot Flow</tspan></text>
+    <path class="note" stroke="#666" fill="#EDF2AE" d="M50 693h1386v39H50z"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="698" x="743"><tspan id="Button_Press_Flow"  x="743">Button Press Flow</tspan></text>
+    <path class="note" stroke="#666" fill="#EDF2AE" d="M50 1158h1386v39H50z"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1163" x="743"><tspan id="Rate_Limited_Printing"  x="743">Rate Limited Printing</tspan></text>
+    <path class="loopLine" d="M687 1207h516M1203 1207v462M687 1669h516M687 1207v462"/>
+    <path class="labelBox" d="M687 1207h50v13l-8.4 7H687z"/>
+    <text style="font-size:16px;font-weight:400" class="labelText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1220" x="712" id="loop" >loop</text>
+    <text style="font-size:16px;font-weight:400" class="loopText" text-anchor="middle" y="1225" x="970"><tspan x="970" id="Every_second" >[Every second]</tspan></text>
+    <path class="note" stroke="#666" fill="#EDF2AE" d="M50 1783h1386v39H50z"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="noteText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1788" x="743"><tspan x="743" id="Heartbeat_Flow" >Heartbeat Flow</tspan></text>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="129" x="245" id="MQTT_initialize_ZebraTail_announce">MQTT: initialize (ZebraTail/announce)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M76 166h337"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="181" x="556" id="RPUSH_TagsToPrint" >RPUSH TagsToPrint</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M418 218h276"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="233" x="1053" id="BLPOP_TagsToPrint_initialization">BLPOP TagsToPrint</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M699 270h708"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="285" x="745" id="MQTT_Print_init_label_thingName_direct">MQTT: Print init label (thingName/direct)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1410 322H79"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="386" x="245" id="MQTT_boot_ZebraTail_announce"  >MQTT: boot (ZebraTail/announce)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M76 423h337"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="438" x="556" id="GET_device_config" >GET device config</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M418 475h276"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="490" x="559" id="Return_template">Return template</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M697 527H421"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="542" x="556" id="RPUSH_TagsToPrint_template">RPUSH TagsToPrint (template)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M418 579h276"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="594" x="1053" id="BLPOP_TagsToPrint_boot" >BLPOP TagsToPrint</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M699 631h708"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="646" x="745" id="MQTT_Print_template_thingName_direct">MQTT: Print template (thingName/direct)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1410 683H79"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="747" x="245" id="MQTT_button_ZebraTail_announce" >MQTT: button (ZebraTail/announce)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M76 784h337"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="799" x="556" id="RPUSH_ButtonPushed">RPUSH ButtonPushed</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M418 836h276"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="851" x="834" id="BLPOP_ButtonPushed" >BLPOP ButtonPushed</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M699 888h270"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="903" x="837" id="GET_device_info">GET device info</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M972 940H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="955" x="834" id="Return_device_config" >Return device config</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M699 992h270"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1007" x="1291" id="HTTP_Get_ZPL_data" >HTTP: Get ZPL data</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M974 1044h633"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1059" x="1294" id="Return_ZPL" >Return ZPL</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M1610 1096H977"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1111" x="837" id="ZADD_printer_jobs_printerId">ZADD printer_jobs:{printerId}</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M972 1148H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1258" x="947" id="SMEMBERS_active_printers">SMEMBERS active_printers</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1191 1295H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1310" x="944" id="Return_printer_IDs" >Return printer IDs</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M699 1347h489"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1362" x="947" id="ZRANGEBYSCORE_printer_jobs_printerId" >ZRANGEBYSCORE printer_jobs:{printerId}</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1191 1399H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1414" x="944" id="Return_due_jobs" >Return due jobs</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M699 1451h489"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1466" x="947" id="GET_hash_job_jobHash">GET hash:job:{jobHash}</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1191 1503H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1518" x="944" id="Check_if_processed">Check if processed</text>
+    <path style="stroke-dasharray:3, 3;fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine1" d="M699 1555h489"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1570" x="947" id="RPUSH_TagsToPrint_if_not_processed" >RPUSH TagsToPrint (if not processed)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1191 1607H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1622" x="947" id="SETEX_hash_job_jobHash" >SETEX hash:job:{jobHash}</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1191 1659H702"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1684" x="1053" id="BLPOP_TagsToPrint_rateLimited" >BLPOP TagsToPrint</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M699 1721h708"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1736" x="745" id="MQTT_Print_label_thingName_direct">MQTT: Print label (thingName/direct)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M1410 1773H79"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1837" x="245" id="MQTT_heartbeat_ZebraTail_announce">MQTT: heartbeat (ZebraTail/announce)</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M76 1874h337"/>
+    <text style="font-size:16px;font-weight:400" dy="1em" class="messageText" alignment-baseline="middle" dominant-baseline="middle" text-anchor="middle" y="1889" x="556" id="Log_heartbeat" >Log heartbeat</text>
+    <path style="fill:none" marker-end="url(#arrowhead)" stroke-width="2" class="messageLine0" d="M418 1926h276"/>
+  </g>
+  <g id="svg-pan-zoom-controls" transform="matrix(.75 0 0 .75 2198 1779)" class="svg-pan-zoom-control">
+    <g id="svg-pan-zoom-zoom-in" class="svg-pan-zoom-control">
+      <path class="svg-pan-zoom-control-background" d="M0 0h1500v1400H0z" transform="matrix(.015 0 0 .015 30.5 5)"/>
+      <path d="M1280 576v128q0 26-19 45t-45 19H896v320q0 26-19 45t-45 19H704q-26 0-45-19t-19-45V768H320q-26 0-45-19t-19-45V576q0-26 19-45t45-19h320V192q0-26 19-45t45-19h128q26 0 45 19t19 45v320h320q26 0 45 19t19 45zm256 544V160q0-119-84.5-203.5T1248-128H288q-119 0-203.5 84.5T0 160v960q0 119 84.5 203.5T288 1408h960q119 0 203.5-84.5T1536 1120z" class="svg-pan-zoom-control-element" transform="matrix(.015 0 0 .015 30.5 5)"/>
+    </g>
+    <g id="svg-pan-zoom-reset-pan-zoom" class="svg-pan-zoom-control">
+      <path class="svg-pan-zoom-control-background" d="M2 2h182v58H2z" transform="matrix(.4 0 0 .4 5 35)"/>
+      <path d="M33.051 20.632c-.742-.406-1.854-.609-3.338-.609h-7.969v9.281h7.769c1.543 0 2.701-.188 3.473-.562 1.365-.656 2.048-1.953 2.048-3.891-.002-2.094-.662-3.5-1.983-4.219z" class="svg-pan-zoom-control-element" transform="matrix(.4 0 0 .4 5 35)"/>
+      <path d="M170.231.5H15.847C7.102.5.5 5.708.5 11.84v38.861C.5 56.833 7.102 61.5 15.847 61.5h154.384c8.745 0 15.269-4.667 15.269-10.798V11.84C185.5 5.708 178.976.5 170.231.5zM42.837 48.569h-7.969a24.823 24.823 0 0 1-.469-1.852 17.004 17.004 0 0 1-.305-2.977l-.047-3.211c-.03-2.203-.41-3.672-1.142-4.406-.732-.734-2.103-1.102-4.113-1.102h-7.05v13.547h-7.055V14.022h16.524c2.361.047 4.178.344 5.45.891a8.532 8.532 0 0 1 3.234 2.414c.731.875 1.31 1.844 1.737 2.906s.64 2.273.64 3.633c0 1.641-.414 3.254-1.242 4.84s-2.195 2.707-4.102 3.363c1.594.641 2.723 1.551 3.387 2.73s.996 2.98.996 5.402v2.32c0 1.578.063 2.648.19 3.211.19.891.635 1.547 1.333 1.969v.868zm32.742 0h-26.18V14.022h25.336v6.117H56.454v7.336h16.781v6H56.454v8.883h19.125v6.211zm28.918-2.238c-2.44 2.086-5.887 3.129-10.34 3.129-4.548 0-8.125-1.027-10.731-3.082s-3.909-4.879-3.909-8.473h6.891c.224 1.578.662 2.758 1.316 3.539 1.196 1.422 3.246 2.133 6.15 2.133 1.739 0 3.151-.188 4.236-.562 2.058-.719 3.087-2.055 3.087-4.008 0-1.141-.504-2.023-1.512-2.648-1.008-.609-2.607-1.148-4.796-1.617l-3.74-.82c-3.676-.812-6.201-1.695-7.576-2.648-2.328-1.594-3.492-4.086-3.492-7.477 0-3.094 1.139-5.664 3.417-7.711s5.623-3.07 10.036-3.07c3.685 0 6.829.965 9.431 2.895 2.602 1.93 3.966 4.73 4.093 8.402h-6.938c-.128-2.078-1.057-3.555-2.787-4.43-1.154-.578-2.587-.867-4.301-.867-1.907 0-3.428.375-4.565 1.125-1.138.75-1.706 1.797-1.706 3.141 0 1.234.561 2.156 1.682 2.766.721.406 2.25.883 4.589 1.43l6.063 1.43c2.657.625 4.648 1.461 5.975 2.508 2.059 1.625 3.089 3.977 3.089 7.055-.002 3.153-1.222 5.774-3.662 7.86zm35.113 2.238h-26.18V14.022h25.336v6.117h-18.281v7.336h16.781v6h-16.781v8.883h19.125v6.211zm30.727-28.429h-10.336v28.43h-7.266V20.14h-10.383v-6.117h27.984v6.117z" class="svg-pan-zoom-control-element" transform="matrix(.4 0 0 .4 5 35)"/>
+    </g>
+    <g id="svg-pan-zoom-zoom-out" class="svg-pan-zoom-control">
+      <path class="svg-pan-zoom-control-background" d="M0 0h1500v1400H0z" transform="matrix(.015 0 0 .015 30.5 70)"/>
+      <path d="M1280 576v128q0 26-19 45t-45 19H320q-26 0-45-19t-19-45V576q0-26 19-45t45-19h896q26 0 45 19t19 45zm256 544V160q0-119-84.5-203.5T1248-128H288q-119 0-203.5 84.5T0 160v960q0 119 84.5 203.5T288 1408h960q119 0 203.5-84.5T1536 1120z" class="svg-pan-zoom-control-element" transform="matrix(.015 0 0 .015 30.5 70)"/>
+    </g>
+  </g>
+</svg>
+    </div>
+<script>
+const svgStructure = {
+  // Main actors (both top and bottom representations)
+  actors: {
+    produceflow: {
+      top: "produceflow_com",
+      bottom: "produceflow_com_bottom"
+    },
+    tagprinter: {
+      top: "tagprinter_js",
+      bottom: "tagprinter_js_bottom"
+    },
+    tagprinterRateLimited: {
+      top: "tagprinterRateLimited_js",
+      bottom: "tagprinterRateLimited_js_bottom"
+    },
+    processbutton: {
+      top: "processbutton_js",
+      bottom: "processbutton_js_bottom"
+    },
+    redis: {
+      top: "Redis",
+      bottom: "Redis_bottom"
+    },
+    receiveAnnounce: {
+      top: "receiveAnnounce_js",
+      bottom: "receiveAnnounce_js_bottom"
+    },
+    zebraTailDevice: {
+      top: "ZebraTail_Device",
+      bottom: "ZebraTail_Device_bottom"
+    }
+  },
+
+  // Flow sections
+  flows: {
+    initialization: "Device_Initialization_Flow",
+    boot: "Boot_Flow",
+    buttonPress: "Button_Press_Flow",
+    rateLimited: "Rate_Limited_Printing",
+    heartbeat: "Heartbeat_Flow"
+  },
+
+  // Special elements
+  special: {
+    loop: "loop",
+    everySecond: "Every_second"
+  },
+
+  // Message mappings for each flow
+  messages: {
+    initialization: {
+      mqtt_init: "MQTT_initialize_ZebraTail_announce",
+      rpush_tags: "RPUSH_TagsToPrint",
+      blpop_tags: "BLPOP_TagsToPrint_initialization",
+      mqtt_print: "MQTT_Print_init_label_thingName_direct"
+    },
+    boot: {
+      mqtt_boot: "MQTT_boot_ZebraTail_announce",
+      get_config: "GET_device_config",
+      return_template: "Return_template",
+      rpush_template: "RPUSH_TagsToPrint_template",
+      blpop_tags: "BLPOP_TagsToPrint_boot",
+      mqtt_print: "MQTT_Print_template_thingName_direct"
+    },
+    buttonPress: {
+      mqtt_button: "MQTT_button_ZebraTail_announce",
+      rpush_button: "RPUSH_ButtonPushed",
+      blpop_button: "BLPOP_ButtonPushed",
+      get_device: "GET_device_info",
+      return_config: "Return_device_config",
+      get_zpl: "HTTP_Get_ZPL_data",
+      return_zpl: "Return_ZPL",
+      zadd_jobs: "ZADD_printer_jobs_printerId"
+    },
+    rateLimited: {
+      get_printers: "SMEMBERS_active_printers",
+      return_printers: "Return_printer_IDs",
+      get_jobs: "ZRANGEBYSCORE_printer_jobs_printerId",
+      return_jobs: "Return_due_jobs",
+      check_hash: "GET_hash_job_jobHash",
+      check_processed: "Check_if_processed",
+      rpush_print: "RPUSH_TagsToPrint_if_not_processed",
+      set_hash: "SETEX_hash_job_jobHash",
+      blpop_tags: "BLPOP_TagsToPrint_rateLimited",
+      mqtt_print: "MQTT_Print_label_thingName_direct"
+    },
+    heartbeat: {
+      mqtt_heartbeat: "MQTT_heartbeat_ZebraTail_announce",
+      log_heartbeat: "Log_heartbeat"
+    }
+  }
+};
+
+// Mapping Redis events to SVG elements
+const eventMapping = {
+  'button': {
+    svgElement: 'MQTT_button_ZebraTail_announce',
+    flow: 'buttonPress',
+    fromActor: 'zebraTailDevice',
+    toActor: 'receiveAnnounce'
+  },
+  'process_button_start': {
+    svgElement: 'BLPOP_ButtonPushed',
+    flow: 'buttonPress',
+    fromActor: 'redis',
+    toActor: 'processbutton'
+  },
+  'device_lookup': {
+    svgElement: 'GET_device_info',
+    flow: 'buttonPress',
+    fromActor: 'processbutton',
+    toActor: 'redis'
+  },
+  'http_request_start': {
+    svgElement: 'HTTP_Get_ZPL_data',
+    flow: 'buttonPress',
+    fromActor: 'processbutton',
+    toActor: 'produceflow'
+  },
+  'http_request_complete': {
+    svgElement: 'Return_ZPL',
+    flow: 'buttonPress',
+    fromActor: 'produceflow',
+    toActor: 'processbutton'
+  },
+  'print_job_enqueued': {
+    svgElement: 'ZADD_printer_jobs_printerId',
+    flow: 'buttonPress',
+    fromActor: 'processbutton',
+    toActor: 'redis'
+  },
+  'rate_limited_printing': {
+    svgElement: 'RPUSH_TagsToPrint_if_not_processed',
+    flow: 'rateLimited',
+    fromActor: 'tagprinterRateLimited',
+    toActor: 'redis'
+  },
+  'queued_for_printing': {
+    svgElement: 'BLPOP_TagsToPrint_rateLimited',
+    flow: 'rateLimited',
+    fromActor: 'redis',
+    toActor: 'tagprinter'
+  },
+  'printing': {
+    svgElement: 'MQTT_Print_label_thingName_direct',
+    flow: 'rateLimited',
+    fromActor: 'tagprinter',
+    toActor: 'zebraTailDevice'
+  }
+};
+var sampleRedisAnswer = [
+{
+  "timestamp": 1736260840889,
+  "type": "button",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "data": {
+    "type": "button",
+    "thingName": "ZebraTail-5E_A5_6C",
+    "ulid": "01JH0KBVDQCA92BJXPS2EY3JB3"
+  }
+},
+
+{
+  "timestamp": 1736260840897,
+  "type": "process_button_start",
+  "thingName": "ZebraTail-5E_A5_6C"
+},
+
+{
+  "timestamp": 1736260840903,
+  "type": "device_lookup",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "project": "willis"
+},
+
+{
+  "timestamp": 1736260840904,
+  "type": "http_request_start",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "url": "https://willis.produceflow.com/zt.php?device=ZebraTail-5E_A5_6C&counter=undefined&"
+},
+
+{
+  "timestamp": 1736260841256,
+  "type": "http_request_complete",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "zpl": "^XA\r\n^XFR:PALLET.GRF\r\n^FN1^FD28456^FS(Lot No)\r\n^FN2^FD  /  /  ^FS(Date)\r\n^FN3^FDMAIN^FS(Warehouse)\r\n^FN4^FD45ct Seedless Bins COO-US^FS(Description)\r\n^FN5^FD1^FS(Qty)\r\n^FN6^FD1045^FS(Item No)\r\n^FN7^FD550003^FS(Pallet No)\r\n^FN10^FDBin^FS(Desc2)\r\n^FN11^FD550003^FS(Pallet No)\r\n^FN12^FD28456^FS(Lot No)\r\n^FN13^FD1^FS(Qty)\r\n^FN14^FD^FS(Trimmed Alias)\r\n^FN16^FD1 of 0^FS\r\n^FN19^FD          ^FS(ID Name)\r\n^FN20^FDMAIN^FS(Whse Description)\r\n^FN21^FD^FS(repack create)\r\n^FN22^FD^FS(repack consume)\r\n^FN23^FD4032^FS(PLU)\r\n^FN24^FD(01)00851677006013(13)      (10)28456^FS(GTIN)\r\n^FN25^FD~~~v1(01)00851677006013(13)      (10)28456~~~^FS(Voice Pick 1)\r\n^FN26^FD~~~v2(01)00851677006013(13)      (10)28456~~~^FS(Voice Pick 2)\r\n^FN27^FD033383402406^FS(UPC)\r\n^FN28^FD          ^FS(Grower ID)\r\n^FN29^FD        ^FS(Field ID)\r\n^FN30^FD      ^FS(Harvester)\r\n^FN31^FD      ^FS(Packshed ID)\r\n^FN32^FDWILLIS2 ^FS(Kitname)\r\n^FN33^FD00851677006013      28456^FS(voice code data)\r\n^XZ\r\n",
+  "status": 200
+},
+
+{
+  "timestamp": 1736260841318,
+  "type": "print_job_enqueued",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "scheduledTime": 1736260841
+},
+
+
+{
+  "timestamp": 1736260841801,
+  "component": "tagprinterRateLimited",
+  "action": "rate_limited_printing",
+  "printerId": "ZebraTail-5E_A5_6C",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "type": "printTag"
+},
+
+{
+  "timestamp": 1736260841804,
+  "component": "tagprinterRateLimited",
+  "action": "queued_for_printing",
+  "printerId": "ZebraTail-5E_A5_6C"
+},
+
+{
+  "timestamp": 1736260841799,
+  "component": "tagprinter",
+  "action": "printing",
+  "thingName": "ZebraTail-5E_A5_6C",
+  "type": "printTag"
+}
+]
+
+
+// Function to process Redis events
+function processEvents(events) {
+  return events.map(event => {
+    const mapping = eventMapping[event.type || event.action];
+    if(mapping) {
+      return {
+        ...event,
+        svgElement: mapping.svgElement,
+        flow: mapping.flow,
+        fromActor: mapping.fromActor,
+        toActor: mapping.toActor,
+        timestamp: new Date(event.timestamp).toLocaleTimeString()
+      };
+    }
+    return event;
+  });
+}
+
+// Function to highlight elements
+function highlightElement(elementId) {
+  const element = document.getElementById(elementId);
+  if(element) {
+    // Remove previous highlights
+    document.querySelectorAll('.highlighted').forEach(el => {
+      el.classList.remove('highlighted');
+    });
+    // Add highlight
+    element.classList.add('highlighted');
+  }
+}
+
+// Function to highlight a step in the flow
+
+// Create a simple UI to demonstrate
+function createUI() {
+  const container = document.createElement('div');
+  container.innerHTML = `
+    <div style="padding: 20px;">
+      <div style="margin-bottom: 20px;">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+        <span id="stepCounter">Step 0 of ${sampleRedisAnswer.length}</span>
+      </div>
+      <div id="currentEvent" style="font-family: monospace; white-space: pre; margin: 20px 0; padding: 10px; background: #f0f0f0;"></div>
+      <div id="diagram">
+        <!-- Your SVG will be here -->
+      </div>
+    </div>
+  `;
+  document.body.appendChild(container);
+}
+
+// Add navigation handlers
+let currentEventIndex = -1;
+
+function updateDisplay() {
+  const event = sampleRedisAnswer[currentEventIndex];
+  const stepCounter = document.getElementById('stepCounter');
+  const currentEventDisplay = document.getElementById('currentEvent');
+  
+  stepCounter.textContent = `Step ${currentEventIndex + 1} of ${sampleRedisAnswer.length}`;
+  
+  if (event) {
+    // Format and display current event
+    const timeString = new Date(event.timestamp).toLocaleTimeString();
+    currentEventDisplay.textContent = JSON.stringify({
+      time: timeString,
+      type: event.type || event.action,
+      component: event.component,
+      thingName: event.thingName
+    }, null, 2);
+
+    // Highlight relevant elements
+    highlightStep(event);
+  }
+}
+
+function nextStep() {
+  if (currentEventIndex < sampleRedisAnswer.length - 1) {
+    currentEventIndex++;
+    updateDisplay();
+  }
+}
+
+function previousStep() {
+  if (currentEventIndex > 0) {
+    currentEventIndex--;
+    updateDisplay();
+  }
+}
+
+// Modified highlight functions for debugging
+function highlightElement(elementId) {
+  const element = document.getElementById(elementId);
+  console.log(`Attempting to highlight: ${elementId}`);
+  if (element) {
+    console.log(`Found element: ${elementId}`);
+    // Remove previous highlights
+    document.querySelectorAll('.highlighted').forEach(el => {
+      el.classList.remove('highlighted');
+    });
+    // Add highlight
+    element.classList.add('highlighted');
+  } else {
+    console.log(`Element not found: ${elementId}`);
+  }
+}
+
+// Remove the old highlightElement function since we're using the new highlightStep
+function highlightStep(event) {
+  console.log('Highlighting step for event:', event);
+  const mapping = eventMapping[event.type || event.action];
+  if (mapping) {
+    console.log('Found mapping:', mapping);
+    
+    // First remove previous element highlights
+    document.querySelectorAll('.highlighted-element').forEach(el => {
+      el.classList.remove('highlighted-element');
+    });
+
+    // Then remove previous actor highlights
+    document.querySelectorAll('.highlighted-actor').forEach(el => {
+      el.classList.remove('highlighted-actor');
+    });
+    
+    // Highlight the message/element
+    const element = document.getElementById(mapping.svgElement);
+    if (element) {
+      element.classList.add('highlighted-element');
+      console.log(`Highlighted element: ${mapping.svgElement}`);
+    } else {
+      console.log(`Element not found: ${mapping.svgElement}`);
+    }
+    
+    // Highlight the actors
+    if (mapping.fromActor) {
+      const fromActorTop = document.getElementById(svgStructure.actors[mapping.fromActor].top);
+      const fromActorBottom = document.getElementById(svgStructure.actors[mapping.fromActor].bottom);
+      if (fromActorTop) {
+        fromActorTop.classList.add('highlighted-actor');
+        console.log(`Highlighted from actor top: ${svgStructure.actors[mapping.fromActor].top}`);
+      }
+      if (fromActorBottom) {
+        fromActorBottom.classList.add('highlighted-actor');
+        console.log(`Highlighted from actor bottom: ${svgStructure.actors[mapping.fromActor].bottom}`);
+      }
+    }
+    
+    if (mapping.toActor) {
+      const toActorTop = document.getElementById(svgStructure.actors[mapping.toActor].top);
+      const toActorBottom = document.getElementById(svgStructure.actors[mapping.toActor].bottom);
+      if (toActorTop) {
+        toActorTop.classList.add('highlighted-actor');
+        console.log(`Highlighted to actor top: ${svgStructure.actors[mapping.toActor].top}`);
+      }
+      if (toActorBottom) {
+        toActorBottom.classList.add('highlighted-actor');
+        console.log(`Highlighted to actor bottom: ${svgStructure.actors[mapping.toActor].bottom}`);
+      }
+    }
+  } else {
+    console.log('No mapping found for event type:', event.type || event.action);
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  createUI();
+  
+  document.getElementById('nextBtn').addEventListener('click', nextStep);
+  document.getElementById('prevBtn').addEventListener('click', previousStep);
+  
+  // Start with first step
+  nextStep();
+});
+
+// Add CSS
+const style = document.createElement('style');
+style.textContent = `
+  .highlighted-element {
+    fill: yellow !important;
+    stroke: orange !important;
+    stroke-width: 2px !important;
+  }
+  .highlighted-actor {
+    fill: #ffebcd !important; /* blanched almond - lighter highlight for actors */
+    stroke: #deb887 !important; /* burlywood - softer stroke for actors */
+  }
+  button {
+    padding: 5px 10px;
+    margin-right: 10px;
+  }
+  #currentEvent {
+    max-height: 200px;
+    overflow: auto;
+  }
+`;
+document.head.appendChild(style);
+</script>    
+</body>
+</html>
