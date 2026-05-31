@@ -111,7 +111,16 @@ function watchAndPrint() {
     }
     if (result) {
       const [key, tagData] = result;
-      var tagData1 = JSON.parse(tagData)
+      var tagData1;
+      try {
+        tagData1 = JSON.parse(tagData)
+      } catch (e) {
+        // Malformed job JSON: skip it and KEEP DRAINING (don't freeze the poller).
+        console.log('flag 4: malformed job JSON, skipping:', e.message)
+        logger.error('malformed job JSON, skipping: ' + e.message)
+        setImmediate(watchAndPrint);
+        return;
+      }
       console.log('flag 3')
       console.log('tagData')
       console.log(tagData1.type,tagData1.thingName)
@@ -150,6 +159,15 @@ function watchAndPrint() {
             logger.info('obj returned from prnttag:',obj);
             setImmediate(watchAndPrint); // Re-initiate the watch after processing
          });
+      } else {
+         // Unknown job type (e.g. 'layout' with no handler here): skip it and KEEP
+         // DRAINING. Without this else, an unhandled type falls through and
+         // watchAndPrint is never re-armed -> the poller stalls and real prints
+         // back up behind it. A skipped layout job is also never published, so it
+         // can't trip the /direct/layout policy-deny -> disconnect -> crash loop.
+         console.log('flag 4: unknown job type, skipping:', tagData1.type)
+         logger.error('unknown job type, skipping: ' + tagData1.type)
+         setImmediate(watchAndPrint);
       }
     } else {
       console.log('flag 5')
