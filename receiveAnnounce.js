@@ -121,6 +121,15 @@ async function main(argv) {
         var longThingName = json.thingName
         console.log(bg.Cyan, fg.Black, 'boot', "\x1b[0m",thingName,json.mac);
         bootLogger.info(bg.Cyan, fg.Black, 'boot', "\x1b[0m",thingName,json.mac);
+        // Dazzle-based devices (Tab5 etc.) take their own paths and must
+        // not trigger the legacy BROCCOLI:DEVICES TEMPLATE -> TagsToPrint
+        // auto-print, even if a stale TEMPLATE array is present on the
+        // record by mistake. versions.dazzle is dazzle-only.
+        if (json.versions && json.versions.dazzle) {
+          console.log('-------',thingName,'is dazzle-based; skipping TEMPLATE auto-print')
+          bootLogger.info('-------',thingName,'is dazzle-based; skipping TEMPLATE auto-print')
+          return;
+        }
         client1.get('BROCCOLI:DEVICES:'+thingName,function(err,theThing) {
           theThing = JSON.parse(theThing)
           if (theThing) {
@@ -156,7 +165,14 @@ async function main(argv) {
              json.zt = ZTobj[json.thingName]['ZTNAME'];
              console.log('woot')
            }
-          client1.rpush('ButtonPushed',JSON.stringify(json))
+          // Tab5 button announces carry an "action" string (the layout's
+          // custom-action payload); flockee-style buttons do not. Route
+          // them to separate queues so consumers can specialize.
+          if (json.action) {
+            client1.rpush('ActionPushed',JSON.stringify(json))
+          } else {
+            client1.rpush('ButtonPushed',JSON.stringify(json))
+          }
         }
         if (json.type === 'scale') {
           console.log(bg.Blue,fg.Green, 'scale',bg.Black,fg.Yellow,showProj(json.thingName),json.thingName,new Date(), "\x1b[0m");
