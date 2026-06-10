@@ -99,10 +99,13 @@ function fireCreate(job, station, done) {
     }
     const summary = String(body || '').slice(0, 200);
     console.log('[processAction] ' + station + ' item=' + job.action + ' -> ' + summary);
-    if (summary.indexOf('ERROR') === 0) {
-      logger.error('fastzs reported error:', summary, 'job:', JSON.stringify(job));
-    } else {
+    // Success is ONLY a body starting with OK. An SSO/login page or any other
+    // HTML comes back as HTTP 200 too — that is a FAILURE (learned 2026-06-10
+    // when the gateway's sign-in page got logged as "created").
+    if (summary.indexOf('OK') === 0) {
       logger.info('created:', summary);
+    } else {
+      logger.error('fastzs did not return OK; job for manual replay:', JSON.stringify(job), 'response:', summary);
     }
     done();
   });
