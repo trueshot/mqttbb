@@ -34,8 +34,12 @@ const log4js = require('log4js');
 
 // ---- config (data, not code) ------------------------------------------------
 const QUEUE = 'ActionPushed';
-const PHP_BASE = process.env.ZS_PHP_BASE || 'https://willis.produceflow.com';
+// n2ag.com = the DIRECT route to the prey webroot (basic auth). Do NOT use
+// <dataset>.produceflow.com here — that's the public gateway + SSO, whose
+// redirect kills server-to-server calls (the triplek ERR_UNSAFE_REDIRECT lesson).
+const PHP_BASE = process.env.ZS_PHP_BASE || 'http://n2ag.com/willis';
 const PHP_PATH = '/fastzs.php';
+const PHP_AUTH = { user: 'george', pass: 'matt' };
 const STATIONS = { zs1: true, zs2: true, zs3: true, zs4: true };   // zs5 = Ken Chan dev: not listed
 const DEDUP_TTL = 600;                                              // seconds
 // -----------------------------------------------------------------------------
@@ -85,7 +89,7 @@ function fireCreate(job, station, done) {
               ' "' + (job.label || '') + '" -> ' + url);
   logger.info('create', station, job.action, job.label || '', job.ulid || '', url);
 
-  request({ url: url, timeout: 60000 }, (error, response, body) => {
+  request({ url: url, auth: PHP_AUTH, timeout: 60000 }, (error, response, body) => {
     if (error || !response || response.statusCode !== 200) {
       console.log('[processAction] create FAILED (job dropped, replay manually):',
                   error ? error.message : 'HTTP ' + (response && response.statusCode));
