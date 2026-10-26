@@ -9,6 +9,9 @@ var client1 = require('redis').createClient({
    password:'e2c7dd14d6961',
    legacyMode: true
 });
+// Eagle closes clients idle 3600 s (CONFIG timeout). Without this handler the ECONNRESET is an
+// unhandled 'error' event and kills the process every hour. redis 2.x reconnects on its own. taghkanic gen-16
+client1.on('error', (err) => console.log('Redis Client Error', err && err.code));
 process.on("exit", function () {
    client1.quit()
 })
