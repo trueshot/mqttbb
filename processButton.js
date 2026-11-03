@@ -53,13 +53,22 @@ var ZTobj = {}
 function listenForButton() {
     //console.log('blocking')
     redisClient.blpop('ButtonPushed', 0, function (err, result) {
+        // Every early exit below must re-arm (rearm()), or the BLPOP loop stops for good while the
+        // process stays alive. An Eagle connection reset during BLPOP did exactly that 2026-10-30. taghkanic gen-17
         if (err) {
             console.log('Error: ', err);
-            return;
+            buttonLogger.error('blpop error, re-arming: ' + (err && err.code));
+            return rearm();
         }
-        
-        
-        const Mobj = JSON.parse(result[1]);
+
+
+        let Mobj;
+        try {
+            Mobj = JSON.parse(result[1]);
+        } catch (e) {
+            buttonLogger.error('bad ButtonPushed JSON, skipping: ' + e.message);
+            return rearm();
+        }
         const ulid = Mobj.ulid; // Get the original ulid
 
         // Store the button processing start event
@@ -79,10 +88,16 @@ function listenForButton() {
         redisClient.get('BROCCOLI:DEVICES:' + thingName, function (err, result) {
             if (err) {
                 console.log('Error: ', err);
-                return;
+                buttonLogger.error('device lookup error, re-arming: ' + (err && err.code));
+                return rearm();
             }
             //console.log('Result: ', result);
-            const device = JSON.parse(result);
+            let device = null;
+            try { device = JSON.parse(result); } catch (e) { device = null; }
+            if (!device || !device.NAME) {
+                buttonLogger.error('unknown device, skipping: BROCCOLI:DEVICES:' + thingName);
+                return rearm();
+            }
             const formattedThingName = device.NAME.replace('ZT', 'ZebraTail-').replace(/_/g, '_');
             // Store device lookup event
             storeEvent(ulid, {
@@ -98,6 +113,11 @@ console.log('Mobj------')
             processRequests(0, theQty, formattedThingName, device.PROJS, theQty,ulid,device.zt);
         });
     });
+}
+
+// Wait a second before reading again so a down Eagle doesn't spin the loop. taghkanic gen-17
+function rearm() {
+    setTimeout(listenForButton, 1000);
 }
 
 function processRequests(index, max, thingName, project, counter, ulid,zt) {
@@ -156,7 +176,8 @@ function handleIncomingJob(printerId, data, ulid) {
                 .then(resolve) // Properly pass resolve as a function reference
                 .catch(error => {
                     console.error('Failed to enqueue job:', error);
-                    // Handle error or reject if necessary
+                    // Resolve anyway: an unresolved promise here froze the loop forever. taghkanic gen-17
+                    resolve();
                 });
         }, 50);
     });
@@ -248,8 +269,9 @@ var lookUpZT = function(zt) {
    var thingName = zt.replace('ZebraTail-', 'ZT').replace(/_/g, '');
    var theThing
    redisClient.get('BROCCOLI:DEVICES:'+thingName,function(err,theThing) {
-      theThing = JSON.parse(theThing)
-      ZTobj[theThing.NAME] = theThing
+      // Display cache only: an unknown device or a lookup error must not crash the process. taghkanic gen-17
+      try { theThing = JSON.parse(theThing) } catch (e) { theThing = null }
+      if (theThing && theThing.NAME) ZTobj[theThing.NAME] = theThing
    })
 }
 
