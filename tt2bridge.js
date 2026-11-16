@@ -275,7 +275,8 @@ async function main() {
   mq.conn.on('interrupt', e => { log('MQTT interrupted', e && e.toString()); bridge.setMqttUp(false); });
   mq.conn.on('resume', () => { log('MQTT resumed'); bridge.setMqttUp(true); });
   mq.conn.on('disconnect', () => { log('MQTT disconnected, exiting (the tab loop restarts me)'); process.exit(123); });
-  log('datasets', CFG.datasets.join(','), 'devices from', CFG.datasetsDir);
+  let sqlite = 'node:sqlite'; try { require('node:sqlite'); } catch (e) { sqlite = fs.existsSync('D:/cot/node_modules/better-sqlite3') ? 'D:/cot better-sqlite3' : 'NONE (devices.db unreadable: no station will be fed)'; }
+  log('node', process.version, '| sqlite', sqlite, '| datasets', CFG.datasets.join(','), '| devices from', CFG.datasetsDir);
   await bridge.start();
 }
 
